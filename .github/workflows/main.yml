@@ -1,0 +1,38 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install NodeJS
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Code Checkout    
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run:  npm ci --force
+
+    - name: Code Linting
+      run:  npm run lint
+        
+    - name: Run chmod to make gradlew executable
+      run:  cd android && chmod +x ./gradlew
+
+    - name: Build Android 
+      run: |
+        cd android
+        ./gradlew assembleDebug
+        if [ $? -eq 0 ]; then
+          echo "::success ::Build Android succeeded"
+        else
+          echo "::error ::Build Android failed"
+          exit 1
+        fi
