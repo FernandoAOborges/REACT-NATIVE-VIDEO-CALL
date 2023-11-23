@@ -16,3 +16,9 @@ English:
 
 Portuguese:
 "Para fazer a chamada todas as vezes, é necessário limpar totalmente o banco de dados e fechar e abrir o aplicativo. Isso porque Salas automáticas não foram implementadas."
+
+
+
+
+https://github.com/FernandoAOborges/REACT-NATIVE-VIDEO-CALL/assets/33990306/52b40a98-5041-4167-8f1f-4e7b9da29edc
+
