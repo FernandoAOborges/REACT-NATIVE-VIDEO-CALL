@@ -1,22 +1,39 @@
-import { View, Button } from 'react-native';
-import React from 'react';
+import { FlatList, PermissionsAndroid } from 'react-native';
+import React, { useCallback } from 'react';
+import RNCallKeep from 'react-native-callkeep';
+import { View } from '@gluestack-ui/themed';
 
-import { PageProps } from '../../navigation/MainNav';
+import { IUsersProps, USERS } from '../../api/API';
+import ReturnCardUsers from './components/ReturnCardUsers';
+import { UseCalle } from '../../hooks';
 
-interface IHomeprops {
-  navigation: PageProps<'Home'>['navigation'];
-}
+RNCallKeep.setup({
+  ios: {
+    appName: 'My App Name',
+  },
+  android: {
+    alertTitle: 'Permissions required',
+    alertDescription: 'This application needs to access your phone accounts',
+    cancelButton: 'Cancel',
+    okButton: 'OK',
+    additionalPermissions: [PermissionsAndroid.PERMISSIONS.READ_CONTACTS],
+  },
+});
 
-const Home = ({ navigation }: IHomeprops) => (
-  <View
-    style={{
-      flex: 1,
-      gap: 100,
-    }}
-  >
-    <Button title="CHAMAR" onPress={() => navigation.navigate('Chamar')} />
-    <Button title="RESPONDER" onPress={() => navigation.navigate('Responder')} />
-  </View>
-);
+const Home = () => {
+  const { joinCall } = UseCalle();
+  const keyExtractor = useCallback((item: IUsersProps) => String(item.id), []);
+
+  const RenderItem = useCallback(
+    ({ item }: { item: IUsersProps }) => <ReturnCardUsers {...item} />,
+    [],
+  );
+
+  return (
+    <View flex={1}>
+      <FlatList data={USERS} keyExtractor={keyExtractor} renderItem={RenderItem} />
+    </View>
+  );
+};
 
 export default Home;

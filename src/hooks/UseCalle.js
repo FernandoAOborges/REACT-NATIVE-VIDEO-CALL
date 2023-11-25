@@ -1,28 +1,17 @@
-/* eslint-disable object-curly-newline */
-import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import { Button, View, TextInput } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
-
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  mediaDevices,
   RTCPeerConnection,
   RTCIceCandidate,
   RTCSessionDescription,
-  mediaDevices,
   RTCView,
 } from 'react-native-webrtc';
+import { API_URL } from '@env';
 import RNCallKeep from 'react-native-callkeep';
-import { useOfferPresence } from '../../hooks';
+import firestore from '@react-native-firebase/firestore';
+import useOfferPresence from './useOfferPresence';
 
-const servers = {
-  iceServers: [
-    {
-      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
-
-const Responder = () => {
+const useCalle = () => {
   const [roomId, setRoomId] = useState('test');
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
@@ -158,26 +147,7 @@ const Responder = () => {
     };
   }, [logout]);
 
-  return (
-    <View>
-      <TextInput value={roomId} onChangeText={(text) => setRoomId(text)} placeholder="Room ID" />
-      <Button title="logout" onPress={logout} />
-      <Button title="Join Call" onPress={joinCall} />
-      {localStream && (
-        <RTCView streamURL={localStream.toURL()} style={{ width: 300, height: 200 }} />
-      )}
-      {remoteStream && (
-        <RTCView
-          streamURL={remoteStream.toURL()}
-          style={{
-            width: 300,
-            height: 200,
-            backgroundColor: 'black', // Adicione um plano de fundo
-          }}
-        />
-      )}
-    </View>
-  );
+  return { joinCall, logout, localStream, remoteStream };
 };
 
-export default memo(Responder);
+export default useCalle;
