@@ -8,7 +8,7 @@ import {
   NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
 
-import { Chamar, Chat, Home, Responder } from '../pages';
+import { Chat, Home } from '@/pages';
 
 const DEFAULT_HEADER_OPTIONS: NativeStackNavigationOptions = {
   headerShown: true,
@@ -24,8 +24,6 @@ const DEFAULT_HEADER_OPTIONS: NativeStackNavigationOptions = {
 
 export type MainNavParamList = {
   Home: undefined;
-  Chamar: undefined;
-  Responder: undefined;
   Chat: {
     name: string;
   };
@@ -38,6 +36,28 @@ export interface PageProps<T extends keyof MainNavParamList> {
 
 const Stack = createNativeStackNavigator<MainNavParamList>();
 
+const CONFIG_PAGES = [
+  {
+    id: 1,
+    name: 'Home',
+    component: Home,
+    title: 'Home',
+    options: {
+      title: 'Talk With Video/Audio',
+      ...DEFAULT_HEADER_OPTIONS,
+    },
+  },
+  {
+    id: 2,
+    name: 'Chat',
+    component: Chat,
+    title: 'Chat',
+    options: {
+      headerShown: false,
+    },
+  },
+];
+
 const App = () => (
   <NavigationContainer>
     <Stack.Navigator
@@ -45,17 +65,19 @@ const App = () => (
         headerShown: false,
       }}
     >
-      <Stack.Screen
-        name="Home"
-        component={Home}
-        options={{
-          title: 'Talk With Video/Audio',
-          ...DEFAULT_HEADER_OPTIONS,
-        }}
-      />
-      <Stack.Screen name="Chamar" component={Chamar} />
-      <Stack.Screen name="Responder" component={Responder} />
-      <Stack.Screen name="Chat" component={Chat} />
+      {CONFIG_PAGES.map(({ component, id, name, title, options }) => (
+        <Stack.Screen
+          key={id}
+          name={name as keyof MainNavParamList}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          component={component as any}
+          options={{
+            title,
+            ...DEFAULT_HEADER_OPTIONS,
+            ...(options || {}),
+          }}
+        />
+      ))}
     </Stack.Navigator>
   </NavigationContainer>
 );

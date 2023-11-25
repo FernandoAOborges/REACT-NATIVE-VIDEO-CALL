@@ -1,3 +1,4 @@
+/* eslint-disable object-curly-newline */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   mediaDevices,

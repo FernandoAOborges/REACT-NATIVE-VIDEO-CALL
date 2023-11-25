@@ -1,3 +1,13 @@
 {
-  "extends": "@tsconfig/react-native/tsconfig.json"
+  "extends": "@tsconfig/react-native/tsconfig.json",
+  "exclude": ["__tests__/**/*-test.ts", "node_modules"],
+  "compilerOptions": {
+    "strict": true,
+    "useUnknownInCatchVariables": false,
+    // Path alias config
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    }
+  }
 }

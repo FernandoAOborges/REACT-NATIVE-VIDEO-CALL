@@ -1,14 +1,14 @@
+/* eslint-disable object-curly-newline */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   mediaDevices,
   RTCPeerConnection,
   RTCIceCandidate,
   RTCSessionDescription,
-  RTCView,
 } from 'react-native-webrtc';
-import { API_URL } from '@env';
 import RNCallKeep from 'react-native-callkeep';
 import firestore from '@react-native-firebase/firestore';
+
 import useOfferPresence from './useOfferPresence';
 
 const useCalle = () => {

@@ -1,9 +1,9 @@
 import { View } from '@gluestack-ui/themed';
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
-import { IUsersProps } from '../../api/API';
-import { useCall } from '../../hooks';
+import { GiftedChat, IMessage } from 'react-native-gifted-chat';
+
+import { useCall } from '@/hooks';
+import { IUsersProps } from '@/api/API';
 
 import ReturnHeader from './components/ReturnHeader';
 
@@ -15,10 +15,10 @@ interface IChatProps {
   };
 }
 
-const Chat = ({ route, navigation }: IChatProps) => {
+const Chat = ({ route }: IChatProps) => {
   const { name } = route.params;
 
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([] as IMessage[]);
 
   const { createCall } = useCall({ name });
 
@@ -56,13 +56,13 @@ const Chat = ({ route, navigation }: IChatProps) => {
       <ReturnHeader name={name} onPress={() => createCall()} />
       <GiftedChat
         messages={messages}
-        onSend={(value) => onSend(value)}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onSend={(value: any) => onSend(value)}
         user={{
           _id: 1,
         }}
       />
       {/* <ReturnAudioVideo /> */}
-      <Button title="dsadasd" onPress={() => navigation.navigate('Chamar')} />
     </View>
   );
 };

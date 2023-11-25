@@ -4,7 +4,7 @@ import React, { memo, useCallback } from 'react';
 import { TouchableOpacity } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
-import { IUsersProps } from '../../../api/API';
+import { IUsersProps } from '@/api/API';
 
 const ReturnCardUsers = ({ avatar, name }: IUsersProps) => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
