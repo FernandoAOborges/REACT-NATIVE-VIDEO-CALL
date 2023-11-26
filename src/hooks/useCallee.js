@@ -10,46 +10,52 @@ import RNCallKeep from 'react-native-callkeep';
 import firestore from '@react-native-firebase/firestore';
 
 import useOfferPresence from './useOfferPresence';
+import useAppSelector from './useAppSelector';
+import { CallerCalleeSelector } from '@/redux/CallerCalleeSlice';
 
-const useCalle = () => {
+const servers = {
+  iceServers: [
+    {
+      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+    },
+  ],
+  iceCandidatePoolSize: 10,
+};
+
+const useCallee = () => {
   const [roomId, setRoomId] = useState('test');
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const peerConnection = useRef(null);
 
-  const { call } = useOfferPresence('rooms', 'test');
+  const peerConnection = useRef(new RTCPeerConnection(servers));
 
-  // console.log('remoteStream: ', remoteStream?.toURL());
+  const { callType } = useAppSelector(CallerCalleeSelector);
 
-  useEffect(() => {
-    const getLocalStream = async () => {
-      const stream = await mediaDevices.getUserMedia({
-        audio: true,
-        video: {
-          mandatory: {
-            minWidth: 500,
-            minHeight: 300,
-            minFrameRate: 30,
-          },
-          facingMode: 'user',
+  console.log(callType);
+
+  useOfferPresence('rooms', roomId, '12345', 'fernando', callType);
+
+  const getLocalStream = useCallback(async () => {
+    const stream = await mediaDevices.getUserMedia({
+      audio: true,
+      video: {
+        mandatory: {
+          minWidth: 500,
+          minHeight: 300,
+          minFrameRate: 30,
         },
-      });
+        facingMode: 'user',
+      },
+    });
 
-      setLocalStream(stream);
-    };
+    setLocalStream(stream);
 
-    getLocalStream();
+    return stream;
   }, []);
 
-  useEffect(() => {
-    if (call) {
-      RNCallKeep.displayIncomingCall('12345', 'Fernando');
-    }
-  }, [call]);
-
-  const joinCall = async (id) => {
+  const joinCall = useCallback(async (localStreamResult) => {
     try {
-      peerConnection.current = new RTCPeerConnection(servers);
+      // peerConnection.current = new RTCPeerConnection(servers);
 
       const roomRef = firestore().collection('rooms').doc('test');
       const roomSnapshot = await roomRef.get();
@@ -58,9 +64,9 @@ const useCalle = () => {
         return;
       }
 
-      localStream
-        .getTracks()
-        .forEach((track) => peerConnection.current.addTrack(track, localStream));
+      localStreamResult
+        ?.getTracks()
+        .forEach((track) => peerConnection?.current?.addTrack(track, localStreamResult));
 
       const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
       peerConnection.current.onicecandidate = (e) => {
@@ -98,42 +104,67 @@ const useCalle = () => {
     } catch (error) {
       // console.log(error);
     }
-  };
+  }, []);
 
   const logout = useCallback(() => {
     try {
-      // await firestore().collection('rooms').doc('test').delete();
-      setRoomId(null);
-      localStream.getTracks().forEach((track) => track.stop());
-      peerConnection.current.close();
-      setRemoteStream(null);
+      if (peerConnection.current !== null && localStream) {
+        // Parar todas as faixas de mídia
+        localStream.getTracks().forEach((track) => {
+          track.stop();
+        });
+
+        // Remover todas as faixas de vídeo e áudio do RTCPeerConnection
+        localStream.getTracks().forEach((track) => {
+          const sender = peerConnection.current.getSenders().find((s) => s.track === track);
+          if (sender) {
+            peerConnection.current.removeTrack(sender);
+          }
+        });
+
+        // Verificar se a descrição remota está presente antes de acessar
+        if (peerConnection.current && peerConnection.current.currentRemoteDescription) {
+          peerConnection.current.close();
+        }
+      }
+
+      peerConnection.current = null;
       setLocalStream(null);
+      setRemoteStream(null);
     } catch (error) {
-      // console.log(error);
+      console.error('Erro ao fazer logout:', error);
     }
   }, [localStream]);
+
+  const handleAnswer = useCallback(async () => {
+    try {
+      const localStreamResult = await getLocalStream();
+
+      if (Object.keys(localStreamResult).length > 0) {
+        await joinCall(localStreamResult);
+      } else {
+        console.error('Erro ao obter a stream local.');
+      }
+    } catch (error) {
+      console.error('Erro ao obter a stream local ou responder a chamada:', error);
+    }
+  }, [joinCall, getLocalStream]);
 
   useEffect(() => {
     const endCallListener = (data) => {
       const { callUUID, reason } = data;
-      console.log(`Chamada encerrada com UUID: ${callUUID}, Motivo: ${reason}`);
+      // console.log(`Chamada encerrada com UUID: ${callUUID}, Motivo: ${reason}`);
       logout();
-      // Faça qualquer outra ação que você deseja quando uma chamada é encerrada
     };
 
     const startCallListener = (data) => {
       const { handle } = data;
       console.log(`Chamada iniciada com o identificador: ${handle}`);
       // RNCallKeep.displayIncomingCall('12345', 'Fernando');
-      // Faça qualquer ação que você deseja quando uma chamada é iniciada
     };
 
-    const answerCallListener = (data) => {
-      const { callUUID } = data;
-      console.log(`Chamada respondia com o identificador: ${JSON.stringify(data, null, 2)}`);
-
-      // RNCallKeep.displayIncomingCall('12345', 'Call');
-      // Faça qualquer ação que você deseja quando uma chamada é iniciada
+    const answerCallListener = () => {
+      handleAnswer();
     };
 
     RNCallKeep.addEventListener('endCall', endCallListener);
@@ -144,10 +175,11 @@ const useCalle = () => {
       // Certifique-se de remover o ouvinte ao desmontar o componente
       RNCallKeep.removeEventListener('endCall');
       RNCallKeep.removeEventListener('didReceiveStartCallAction');
+      RNCallKeep.removeEventListener('answerCall');
     };
-  }, [logout]);
+  }, [logout, handleAnswer]);
 
-  return { joinCall, logout, localStream, remoteStream };
+  return { handleAnswer, logout, localStream, remoteStream };
 };
 
-export default useCalle;
+export default useCallee;

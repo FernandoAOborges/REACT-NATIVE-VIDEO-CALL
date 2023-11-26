@@ -3,8 +3,9 @@ import React, { useCallback } from 'react';
 import RNCallKeep from 'react-native-callkeep';
 import { View } from '@gluestack-ui/themed';
 
-import { IUsersProps, USERS } from '@/api/API';
-import { useCalle } from '@/hooks';
+import { USERS } from '@/api/API';
+import { useCallee } from '@/hooks';
+import { IUsersProps } from '@/types/Types';
 
 import ReturnCardUsers from './components/ReturnCardUsers';
 
@@ -22,7 +23,7 @@ RNCallKeep.setup({
 });
 
 const Home = () => {
-  useCalle();
+  useCallee();
   const keyExtractor = useCallback((item: IUsersProps) => String(item.id), []);
 
   const RenderItem = useCallback(

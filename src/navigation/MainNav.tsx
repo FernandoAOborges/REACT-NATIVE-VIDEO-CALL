@@ -1,7 +1,7 @@
 /* eslint-disable object-curly-newline */
 
-import * as React from 'react';
-import { NavigationContainer, RouteProp } from '@react-navigation/native';
+import React from 'react';
+import { RouteProp } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   NativeStackNavigationOptions,
@@ -58,28 +58,25 @@ const CONFIG_PAGES = [
   },
 ];
 
-const App = () => (
-  <NavigationContainer>
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      {CONFIG_PAGES.map(({ component, id, name, title, options }) => (
-        <Stack.Screen
-          key={id}
-          name={name as keyof MainNavParamList}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          component={component as any}
-          options={{
-            title,
-            ...DEFAULT_HEADER_OPTIONS,
-            ...(options || {}),
-          }}
-        />
-      ))}
-    </Stack.Navigator>
-  </NavigationContainer>
+const MainNav = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false,
+    }}
+  >
+    {CONFIG_PAGES.map(({ component, id, name, title, options }) => (
+      <Stack.Screen
+        key={id}
+        name={name as keyof MainNavParamList}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component={component as any}
+        options={{
+          title,
+          ...(options || {}),
+        }}
+      />
+    ))}
+  </Stack.Navigator>
 );
 
-export default App;
+export default MainNav;

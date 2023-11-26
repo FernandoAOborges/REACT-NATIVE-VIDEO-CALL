@@ -1,36 +1,49 @@
 import { useEffect, useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
+import RNCallKeep from 'react-native-callkeep';
+import { ECallTypeProps } from '@/types/Types';
 
-const useOfferPresence = (collectionPath: string, documentId: string) => {
-  const [call, setCall] = useState(false);
+const useOfferPresence = (
+  collectionPath: string,
+  documentId: string,
+  idCall: string,
+  name: string,
+  callType: ECallTypeProps | null,
+  firestoreInstance = firestore(), // Passar a instância do firestore como um parâmetro opcional
+) => {
+  const [isOfferPresent, setIsOfferPresent] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = firestore()
+    const unsubscribe = firestoreInstance
       .collection(collectionPath)
       .doc(documentId)
       .onSnapshot(
         (snapshot) => {
           const data = snapshot.data();
+
           if (data && data.offer !== undefined) {
-            // console.log('O campo "offer" existe:', data.offer);
-            setCall(true);
+            setIsOfferPresent(true);
+
+            // Exibir a chamada recebida apenas se for do tipo CALLER
+            if (callType !== ECallTypeProps.CALLER) {
+              RNCallKeep.displayIncomingCall(idCall, name);
+            }
           } else {
-            // console.log('O campo "offer" não existe ou é undefined.');
-            setCall(false);
+            setIsOfferPresent(false);
           }
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (error) => {
-          setCall(false);
-          // console.error('Erro ao obter o snapshot:', error);
+          console.error('Erro ao obter o snapshot:', error);
+          setIsOfferPresent(false);
+          // Adicione lógica adicional para lidar com o erro, se necessário
         },
       );
 
     return () => unsubscribe();
-  }, [collectionPath, documentId]); // Dependências do useEffect
+  }, [collectionPath, documentId, idCall, name, callType, firestoreInstance]);
 
   return {
-    call,
+    isOfferPresent,
   };
 };
 

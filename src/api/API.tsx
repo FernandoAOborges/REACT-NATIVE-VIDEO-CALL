@@ -1,8 +1,6 @@
-export interface IUsersProps {
-  id: number;
-  name: string;
-  avatar: string;
-}
+import { IUsersProps } from '@/types/Types';
+
+// eslint-disable-next-line import/prefer-default-export
 export const USERS: IUsersProps[] = [
   {
     id: 1,

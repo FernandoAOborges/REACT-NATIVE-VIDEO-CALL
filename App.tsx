@@ -1,13 +1,16 @@
 import React from 'react';
 import { GluestackUIProvider } from '@gluestack-ui/themed';
 import { config } from '@gluestack-ui/config';
+import { NavigationContainer } from '@react-navigation/native';
 
-import MainNav from './src/navigation/MainNav';
+import { MainNav } from '@/navigation';
 
 const App = () => (
-  <GluestackUIProvider config={config}>
-    <MainNav />
-  </GluestackUIProvider>
+  <NavigationContainer>
+    <GluestackUIProvider config={config}>
+      <MainNav />
+    </GluestackUIProvider>
+  </NavigationContainer>
 );
 
 export default App;
