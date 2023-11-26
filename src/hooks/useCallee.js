@@ -11,7 +11,7 @@ import firestore from '@react-native-firebase/firestore';
 
 import useOfferPresence from './useOfferPresence';
 import useAppSelector from './useAppSelector';
-import { CallerCalleeSelector } from '@/redux/CallerCalleeSlice';
+import { AuthenticationSelector } from '@/redux/AuthenticationSlice';
 
 const servers = {
   iceServers: [
@@ -29,11 +29,12 @@ const useCallee = () => {
 
   const peerConnection = useRef(new RTCPeerConnection(servers));
 
-  const { callType } = useAppSelector(CallerCalleeSelector);
+  // const { callType } = useAppSelector(CallerCalleeSelector);
+  const { user } = useAppSelector(AuthenticationSelector);
 
-  console.log(callType);
+  // console.log(user);
 
-  useOfferPresence('rooms', roomId, '12345', 'fernando', callType);
+  useOfferPresence('rooms', roomId, user);
 
   const getLocalStream = useCallback(async () => {
     const stream = await mediaDevices.getUserMedia({
@@ -53,20 +54,18 @@ const useCallee = () => {
     return stream;
   }, []);
 
-  const joinCall = useCallback(async (localStreamResult) => {
+  const joinCall = useCallback(async () => {
     try {
-      // peerConnection.current = new RTCPeerConnection(servers);
-
       const roomRef = firestore().collection('rooms').doc('test');
       const roomSnapshot = await roomRef.get();
 
       if (!roomSnapshot.exists) {
-        return;
+        throw new Error('Room does not exist');
       }
 
-      localStreamResult
+      localStream
         ?.getTracks()
-        .forEach((track) => peerConnection?.current?.addTrack(track, localStreamResult));
+        .forEach((track) => peerConnection?.current?.addTrack(track, localStream));
 
       const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
       peerConnection.current.onicecandidate = (e) => {
@@ -97,14 +96,14 @@ const useCallee = () => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added') {
             const data = change.doc.data();
-            await peerConnection.current.addIceCandidate(new RTCIceCandidate(data));
+            await peerConnection.current?.addIceCandidate(new RTCIceCandidate(data));
           }
         });
       });
     } catch (error) {
       // console.log(error);
     }
-  }, []);
+  }, [localStream]);
 
   const logout = useCallback(() => {
     try {
@@ -151,20 +150,20 @@ const useCallee = () => {
   }, [joinCall, getLocalStream]);
 
   useEffect(() => {
-    const endCallListener = (data) => {
-      const { callUUID, reason } = data;
+    const endCallListener = () => {
+      // const { callUUID, reason } = data;
       // console.log(`Chamada encerrada com UUID: ${callUUID}, Motivo: ${reason}`);
       logout();
     };
 
-    const startCallListener = (data) => {
-      const { handle } = data;
-      console.log(`Chamada iniciada com o identificador: ${handle}`);
+    const startCallListener = () => {
+      // const { handle } = data;
+      // console.log(`Chamada iniciada com o identificador: ${handle}`);
       // RNCallKeep.displayIncomingCall('12345', 'Fernando');
     };
 
-    const answerCallListener = () => {
-      handleAnswer();
+    const answerCallListener = async () => {
+      await handleAnswer();
     };
 
     RNCallKeep.addEventListener('endCall', endCallListener);

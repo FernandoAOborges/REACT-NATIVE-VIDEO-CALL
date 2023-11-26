@@ -2,7 +2,7 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persistReducer } from 'redux-persist';
 
-import CallerCallee from './CallerCalleeSlice';
+import Authentication from './AuthenticationSlice';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const createDebugger = require('redux-flipper').default;
@@ -12,10 +12,11 @@ const persistConfig = {
   version: 1,
   storage: AsyncStorage,
   whitelist: ['authentication'],
+  // blacklist: ['authentication'],
 };
 
 const rootReducer = combineReducers({
-  callerCallee: CallerCallee,
+  authentication: Authentication,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

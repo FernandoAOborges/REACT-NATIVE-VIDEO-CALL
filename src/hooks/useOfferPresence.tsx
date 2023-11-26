@@ -1,33 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
 import RNCallKeep from 'react-native-callkeep';
-import { ECallTypeProps } from '@/types/Types';
 
-const useOfferPresence = (
-  collectionPath: string,
-  documentId: string,
-  idCall: string,
-  name: string,
-  callType: ECallTypeProps | null,
-  firestoreInstance = firestore(), // Passar a instância do firestore como um parâmetro opcional
-) => {
+import { ECallsStageProps, IUsersProps } from '@/types/Types';
+
+const useOfferPresence = (collectionPath: string, documentId: string, user: IUsersProps) => {
   const [isOfferPresent, setIsOfferPresent] = useState(false);
 
+  const updateStatus = useCallback(async () => {
+    try {
+      await firestore().collection(collectionPath).doc(documentId).update({
+        'userData.status': ECallsStageProps.STARTED,
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar o status no Firebase:', error);
+    }
+  }, [collectionPath, documentId]);
+
   useEffect(() => {
-    const unsubscribe = firestoreInstance
+    const unsubscribe = firestore()
       .collection(collectionPath)
       .doc(documentId)
       .onSnapshot(
         (snapshot) => {
           const data = snapshot.data();
 
-          if (data && data.offer !== undefined) {
-            setIsOfferPresent(true);
+          const { receiver, status } = data?.userData || {};
 
-            // Exibir a chamada recebida apenas se for do tipo CALLER
-            if (callType !== ECallTypeProps.CALLER) {
-              RNCallKeep.displayIncomingCall(idCall, name);
-            }
+          if (
+            data &&
+            data.offer !== undefined &&
+            receiver === user?.id &&
+            status === ECallsStageProps.WAITING
+          ) {
+            RNCallKeep.displayIncomingCall(documentId, user?.name);
+            updateStatus();
+
+            // update status on firebase
           } else {
             setIsOfferPresent(false);
           }
@@ -40,7 +49,7 @@ const useOfferPresence = (
       );
 
     return () => unsubscribe();
-  }, [collectionPath, documentId, idCall, name, callType, firestoreInstance]);
+  }, [collectionPath, documentId, user, updateStatus]);
 
   return {
     isOfferPresent,

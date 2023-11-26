@@ -9,6 +9,7 @@ import {
 } from '@react-navigation/native-stack';
 
 import { Chat, Home } from '@/pages';
+import { IUsersProps } from '@/types/Types';
 
 const DEFAULT_HEADER_OPTIONS: NativeStackNavigationOptions = {
   headerShown: true,
@@ -24,9 +25,7 @@ const DEFAULT_HEADER_OPTIONS: NativeStackNavigationOptions = {
 
 export type MainNavParamList = {
   Home: undefined;
-  Chat: {
-    name: string;
-  };
+  Chat: IUsersProps;
 };
 
 export interface PageProps<T extends keyof MainNavParamList> {

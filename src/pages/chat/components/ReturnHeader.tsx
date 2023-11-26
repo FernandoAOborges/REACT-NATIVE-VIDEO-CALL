@@ -12,7 +12,7 @@ const ReturnHeader = ({ name, onPress }: IReturnHeaderProps) => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   return (
-    <HStack bg="#47bef3" p="$4" elevation="$4">
+    <HStack bg="#47bef3" p="$4" elevation="$4" alignItems="center" justifyContent="space-between">
       <FontAwesome
         name="chevron-left"
         color="white"
@@ -21,7 +21,7 @@ const ReturnHeader = ({ name, onPress }: IReturnHeaderProps) => {
           navigation.goBack();
         }}
       />
-      <Text textAlign="center" flex={1} color="$white">
+      <Text textAlign="center" color="$white" ellipsizeMode="tail" numberOfLines={1}>
         {name}
       </Text>
       <VStack bg="$white" p="$1" borderRadius="$lg" elevation="$4">

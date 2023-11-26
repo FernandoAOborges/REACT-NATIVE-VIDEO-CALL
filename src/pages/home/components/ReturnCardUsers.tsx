@@ -6,12 +6,12 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 import { IUsersProps } from '@/types/Types';
 
-const ReturnCardUsers = ({ avatar, name }: IUsersProps) => {
+const ReturnCardUsers = ({ data }: { data: IUsersProps }) => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   const handleNavigation = useCallback(() => {
-    navigation.navigate('Chat', { name });
-  }, [navigation, name]);
+    navigation.navigate('Chat', { dataUserRequest: data });
+  }, [navigation, data]);
 
   return (
     <TouchableOpacity onPress={handleNavigation} activeOpacity={0.8}>
@@ -27,16 +27,16 @@ const ReturnCardUsers = ({ avatar, name }: IUsersProps) => {
         space="md"
       >
         <Avatar bgColor="$amber600" size="lg" borderRadius="$full">
-          <AvatarFallbackText>{name}</AvatarFallbackText>
+          <AvatarFallbackText>{data?.name}</AvatarFallbackText>
           <AvatarImage
             source={{
-              uri: avatar,
+              uri: data?.avatar,
             }}
             alt="Image avatar"
           />
         </Avatar>
         <Text color="$white" fontWeight="bold">
-          {name}
+          {data?.name}
         </Text>
 
         <HStack justifyContent="flex-end" flex={1} space="lg">

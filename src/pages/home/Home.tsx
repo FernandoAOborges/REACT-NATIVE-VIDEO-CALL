@@ -27,7 +27,8 @@ const Home = () => {
   const keyExtractor = useCallback((item: IUsersProps) => String(item.id), []);
 
   const RenderItem = useCallback(
-    ({ item }: { item: IUsersProps }) => <ReturnCardUsers {...item} />,
+    // eslint-disable-next-line react/no-unused-prop-types
+    ({ item }: { item: IUsersProps }) => <ReturnCardUsers data={item} />,
     [],
   );
 

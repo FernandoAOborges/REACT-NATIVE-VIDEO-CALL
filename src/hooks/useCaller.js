@@ -9,15 +9,10 @@ import {
 import { API_URL } from '@env';
 import RNCallKeep from 'react-native-callkeep';
 import firestore from '@react-native-firebase/firestore';
-import useAppDispatch from './useAppDispatch';
-import { setCallType } from '@/redux/CallerCalleeSlice';
-import { ECallTypeProps } from '@/types/Types';
 
-const useCaller = ({ name }) => {
+const useCaller = ({ dataUserRequest, user }) => {
   const [roomId, setRoomId] = useState('test');
   const peerConnection = useRef(null);
-
-  const dispatch = useAppDispatch();
 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
@@ -26,14 +21,7 @@ const useCaller = ({ name }) => {
     iceServers: [],
   });
 
-  const handleDispatchCallerCalle = useCallback(
-    (value) => {
-      dispatch(setCallType(value));
-    },
-    [dispatch],
-  );
-
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     try {
       if (peerConnection.current !== null && localStream) {
         // Parar todas as faixas de mídia
@@ -58,11 +46,10 @@ const useCaller = ({ name }) => {
       peerConnection.current = null;
       setLocalStream(null);
       setRemoteStream(null);
-      handleDispatchCallerCalle(null);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
-  }, [localStream, handleDispatchCallerCalle]);
+  }, [localStream]);
 
   const getLocalStream = useCallback(async () => {
     const stream = await mediaDevices.getUserMedia({
@@ -115,7 +102,15 @@ const useCaller = ({ name }) => {
           }
         };
 
-        const roomWithOffer = { offer };
+        const userData = {
+          call_id: roomId,
+          sender: user.id,
+          receiver: dataUserRequest.id,
+          status: 'waiting',
+          timestamp: new Date().getTime(),
+        };
+
+        const roomWithOffer = { offer, userData };
         await roomRef.set(roomWithOffer);
 
         roomRef.onSnapshot(async (snapshot) => {
@@ -140,14 +135,14 @@ const useCaller = ({ name }) => {
           });
         });
 
-        RNCallKeep.startCall(name, 'Call', name);
+        RNCallKeep.startCall(dataUserRequest?.name, 'Call', dataUserRequest?.name);
 
         // setCachedLocalPC(localPC);
       } catch (error) {
-        // console.log(error);
+        console.log(error);
       }
     },
-    [name, roomId, serverCOnfig],
+    [roomId, serverCOnfig, dataUserRequest, user?.id],
   );
 
   const handleConnection = useCallback(async () => {
@@ -156,14 +151,13 @@ const useCaller = ({ name }) => {
 
       if (Object.keys(localStreamResult).length > 0) {
         await createCall(localStreamResult);
-        handleDispatchCallerCalle(ECallTypeProps.CALLER);
       } else {
         console.error('Erro ao obter a stream local.');
       }
     } catch (error) {
       console.error('Erro ao obter a stream local ou criar a chamada:', error);
     }
-  }, [createCall, getLocalStream, handleDispatchCallerCalle]);
+  }, [createCall, getLocalStream]);
 
   useEffect(() => {
     try {
@@ -184,12 +178,55 @@ const useCaller = ({ name }) => {
   }, []);
 
   useEffect(() => {
-    RNCallKeep.addEventListener('endCall', logout);
+    const handleLogout = async () => {
+      await logout();
+    };
+
+    RNCallKeep.addEventListener('endCall', handleLogout);
 
     return () => {
       RNCallKeep.removeEventListener('endCall');
     };
   }, [logout]);
+
+  // useEffect(() => {
+  //   const handleIceConnectionStateChange = () => {
+  //     if (!peerConnection.current) {
+  //       // Verifica se peerConnection.current é null antes de acessar suas propriedades
+  //       return;
+  //     }
+
+  //     console.log('Ice Connection State:', peerConnection.current.iceConnectionState);
+
+  //     if (
+  //       peerConnection.current.iceConnectionState === 'disconnected' ||
+  //       peerConnection.current.iceConnectionState === 'failed'
+  //     ) {
+  //       // O usuário caiu ou a conexão falhou
+  //       console.log('Usuário caiu');
+  //       // Tome medidas adicionais, se necessário
+  //     }
+  //   };
+
+  //   if (peerConnection.current) {
+  //     // Adiciona o ouvinte ao evento iceConnectionStateChange se peerConnection.current não for null
+  //     peerConnection.current.addEventListener(
+  //       'iceConnectionStateChange',
+  //       handleIceConnectionStateChange,
+  //     );
+  //   }
+
+  //   // Retorna uma função para remover o ouvinte quando não for mais necessário
+  //   return () => {
+  //     if (peerConnection.current) {
+  //       // Remove o ouvinte do evento iceConnectionStateChange se peerConnection.current não for null
+  //       peerConnection.current.removeEventListener(
+  //         'iceConnectionStateChange',
+  //         handleIceConnectionStateChange,
+  //       );
+  //     }
+  //   };
+  // }, [peerConnection.current]); // Certifique-se de incluir peerConnection.current como dependência se necessário
 
   return { handleConnection, logout, localStream, remoteStream };
 };

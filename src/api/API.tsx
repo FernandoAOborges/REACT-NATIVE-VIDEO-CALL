@@ -53,3 +53,9 @@ export const USERS: IUsersProps[] = [
     avatar: 'https://picsum.photos/id/130/200/2000',
   },
 ];
+
+export const USER_DATA_FAKE: IUsersProps = {
+  name: 'Fernando',
+  avatar: 'https://picsum.photos/id/110/200/',
+  id: 11,
+};

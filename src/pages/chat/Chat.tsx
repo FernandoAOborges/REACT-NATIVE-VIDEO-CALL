@@ -1,29 +1,29 @@
 import { View } from '@gluestack-ui/themed';
-import React, { useState, useCallback, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 
-import { useAppDispatch, useCaller } from '@/hooks';
+import { useAppSelector, useCaller } from '@/hooks';
 import { IUsersProps } from '@/types/Types';
+import { AuthenticationSelector } from '@/redux/AuthenticationSlice';
 
 import ReturnHeader from './components/ReturnHeader';
-import { setCallType } from '@/redux/CallerCalleeSlice';
 
 interface IChatProps {
   route: {
     params: {
-      name: IUsersProps['name'];
+      dataUserRequest: IUsersProps;
     };
   };
 }
 
 const Chat = ({ route }: IChatProps) => {
-  const { name } = route.params;
-
-  const dispatch = useAppDispatch();
+  const { dataUserRequest } = route.params;
 
   const [messages, setMessages] = useState([] as IMessage[]);
 
-  const { handleConnection } = useCaller({ name });
+  const { user } = useAppSelector(AuthenticationSelector);
+
+  const { handleConnection } = useCaller({ dataUserRequest, user });
 
   useEffect(() => {
     setMessages([
@@ -54,13 +54,9 @@ const Chat = ({ route }: IChatProps) => {
     setMessages((previousMessages) => GiftedChat.append(previousMessages, messagesUsers));
   }, []);
 
-  useLayoutEffect(() => {
-    dispatch(setCallType(null));
-  }, [dispatch]);
-
   return (
     <View flex={1}>
-      <ReturnHeader name={name} onPress={handleConnection} />
+      <ReturnHeader name={dataUserRequest?.name} onPress={handleConnection} />
       <GiftedChat
         messages={messages}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
