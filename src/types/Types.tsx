@@ -23,3 +23,22 @@ export interface ICallTypes {
   status: ECallsStageProps;
   timestamp: Date;
 }
+
+export enum EFirebaseFoldersProps {
+  ROOMS = 'rooms',
+}
+
+export enum EFirebaseCollectionsProps {
+  CALLER_CANDIDATES = 'callerCandidates',
+  CALLEE_CANDIDATES = 'calleeCandidates',
+}
+
+interface IIceServer {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}
+
+export interface IServerConfigProps {
+  iceServers: IIceServer[];
+}

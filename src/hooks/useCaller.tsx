@@ -5,19 +5,32 @@ import {
   RTCPeerConnection,
   RTCIceCandidate,
   RTCSessionDescription,
+  MediaStream,
 } from 'react-native-webrtc';
-import { API_URL } from '@env';
 import RNCallKeep from 'react-native-callkeep';
 import firestore from '@react-native-firebase/firestore';
 
-const useCaller = ({ dataUserRequest, user }) => {
-  const [roomId, setRoomId] = useState('test');
-  const peerConnection = useRef(null);
+import { API_URL } from '@env';
+import {
+  EFirebaseCollectionsProps,
+  EFirebaseFoldersProps,
+  IServerConfigProps,
+  IUsersProps,
+} from '@/types/Types';
 
-  const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
+interface IUseCallerProps {
+  dataUserRequest: IUsersProps;
+  user: IUsersProps;
+}
 
-  const [serverCOnfig, setserverCOnfig] = useState({
+const useCaller = ({ dataUserRequest, user }: IUseCallerProps) => {
+  const [roomId, setRoomId] = useState<string>('test');
+  const peerConnection = useRef<RTCPeerConnection | null>(null);
+
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
+  const [serverCOnfig, setserverCOnfig] = useState<IServerConfigProps>({
     iceServers: [],
   });
 
@@ -31,9 +44,9 @@ const useCaller = ({ dataUserRequest, user }) => {
 
         // Remover todas as faixas de vídeo e áudio do RTCPeerConnection
         localStream.getTracks().forEach((track) => {
-          const sender = peerConnection.current.getSenders().find((s) => s.track === track);
+          const sender = peerConnection.current?.getSenders().find((s) => s.track === track);
           if (sender) {
-            peerConnection.current.removeTrack(sender);
+            peerConnection.current?.removeTrack(sender);
           }
         });
 
@@ -70,7 +83,7 @@ const useCaller = ({ dataUserRequest, user }) => {
   }, []);
 
   const createCall = useCallback(
-    async (localStreamResult) => {
+    async (localStreamResult: MediaStream) => {
       try {
         if (serverCOnfig.iceServers.length === 0) {
           return;
@@ -79,10 +92,12 @@ const useCaller = ({ dataUserRequest, user }) => {
         peerConnection.current = new RTCPeerConnection(serverCOnfig);
         localStreamResult
           .getTracks()
-          .forEach((track) => peerConnection.current.addTrack(track, localStreamResult));
+          .forEach((track) => peerConnection.current?.addTrack(track, localStreamResult));
 
-        const roomRef = firestore().collection('rooms').doc(roomId);
-        const callerCandidatesCollection = roomRef.collection('callerCandidates');
+        const roomRef = firestore().collection(EFirebaseFoldersProps.ROOMS).doc(roomId);
+        const callerCandidatesCollection = roomRef.collection(
+          EFirebaseCollectionsProps.CALLER_CANDIDATES,
+        );
 
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
@@ -126,11 +141,11 @@ const useCaller = ({ dataUserRequest, user }) => {
           }
         });
 
-        roomRef.collection('calleeCandidates').onSnapshot((snapshot) => {
+        roomRef.collection(EFirebaseCollectionsProps.CALLEE_CANDIDATES).onSnapshot((snapshot) => {
           snapshot.docChanges().forEach(async (change) => {
             if (change.type === 'added') {
               const data = change.doc.data();
-              await peerConnection.current.addIceCandidate(new RTCIceCandidate(data));
+              await peerConnection.current?.addIceCandidate(new RTCIceCandidate(data));
             }
           });
         });
@@ -188,45 +203,6 @@ const useCaller = ({ dataUserRequest, user }) => {
       RNCallKeep.removeEventListener('endCall');
     };
   }, [logout]);
-
-  // useEffect(() => {
-  //   const handleIceConnectionStateChange = () => {
-  //     if (!peerConnection.current) {
-  //       // Verifica se peerConnection.current é null antes de acessar suas propriedades
-  //       return;
-  //     }
-
-  //     console.log('Ice Connection State:', peerConnection.current.iceConnectionState);
-
-  //     if (
-  //       peerConnection.current.iceConnectionState === 'disconnected' ||
-  //       peerConnection.current.iceConnectionState === 'failed'
-  //     ) {
-  //       // O usuário caiu ou a conexão falhou
-  //       console.log('Usuário caiu');
-  //       // Tome medidas adicionais, se necessário
-  //     }
-  //   };
-
-  //   if (peerConnection.current) {
-  //     // Adiciona o ouvinte ao evento iceConnectionStateChange se peerConnection.current não for null
-  //     peerConnection.current.addEventListener(
-  //       'iceConnectionStateChange',
-  //       handleIceConnectionStateChange,
-  //     );
-  //   }
-
-  //   // Retorna uma função para remover o ouvinte quando não for mais necessário
-  //   return () => {
-  //     if (peerConnection.current) {
-  //       // Remove o ouvinte do evento iceConnectionStateChange se peerConnection.current não for null
-  //       peerConnection.current.removeEventListener(
-  //         'iceConnectionStateChange',
-  //         handleIceConnectionStateChange,
-  //       );
-  //     }
-  //   };
-  // }, [peerConnection.current]); // Certifique-se de incluir peerConnection.current como dependência se necessário
 
   return { handleConnection, logout, localStream, remoteStream };
 };

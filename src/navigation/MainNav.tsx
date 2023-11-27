@@ -40,7 +40,6 @@ const CONFIG_PAGES = [
     id: 1,
     name: 'Home',
     component: Home,
-    title: 'Home',
     options: {
       title: 'Talk With Video/Audio',
       ...DEFAULT_HEADER_OPTIONS,
@@ -50,7 +49,6 @@ const CONFIG_PAGES = [
     id: 2,
     name: 'Chat',
     component: Chat,
-    title: 'Chat',
     options: {
       headerShown: false,
     },
@@ -63,14 +61,13 @@ const MainNav = () => (
       headerShown: false,
     }}
   >
-    {CONFIG_PAGES.map(({ component, id, name, title, options }) => (
+    {CONFIG_PAGES.map(({ component, id, name, options }) => (
       <Stack.Screen
         key={id}
         name={name as keyof MainNavParamList}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         component={component as any}
         options={{
-          title,
           ...(options || {}),
         }}
       />
